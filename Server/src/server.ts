@@ -5,6 +5,7 @@ import connectDB from './config/db';
 import authroutes from './routes/auth.route';
 import workspaceRoutes from './routes/workspace.route';
 import projectRoutes from './routes/project.route';
+import taskRoutes from './routes/task.route';
 
 dotenv.config();
 
@@ -18,7 +19,8 @@ app.use(express.json());
 
 app.use('/api/auth', authroutes);
 app.use('/api/workspaces', workspaceRoutes);
-app.use('api/projects', projectRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'DevSync API is operation' })
