@@ -35,3 +35,54 @@ export const createWorkspaceHandler = async (
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
+
+export const getUserWorkspacesHandler = async (req: Request, res: Response) => {
+  try {
+
+    const userId = (req as AuthRequest).userId;
+
+    const workspaces = await Workspace.find({ members: userId });
+
+    res.status(200).json({
+      status: "Success",
+      results: workspaces.length,
+      data: {
+        workspaces,
+      }
+    })
+
+  } catch (error: any) {
+    res.status(500).json({ message: "Internal server error", error: error.message })
+  }
+}
+
+export const deleteWorkspaceHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = (req as AuthRequest).userId;
+
+    // 1. Security Check: Verify the workspace exists AND the user is a member
+    const workspace = await Workspace.findOne({
+      _id: workspaceId,
+      members: userId,
+    });
+
+    if (!workspace) {
+      res.status(403).json({ message: 'Forbidden: You do not have permission to delete this workspace' });
+      return;
+    }
+
+    // 2. Delete the workspace
+    await Workspace.findByIdAndDelete(workspaceId);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Workspace successfully deleted',
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
