@@ -1,63 +1,32 @@
-import { useState } from 'react';
-import api from './api/axiosClient';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import ProjectBoard from './pages/ProjectBoard';
+import TaskBoard from './pages/TaskBoard';
+import Home from './pages/Home';
+import Layout from './components/Layout';
 
 function App() {
-  const [status, setStatus] = useState<string>('Not logged in');
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-
-  const handleLoginTest = async () => {
-    try {
-      setStatus('Attempting login...');
-
-      const response = await api.post('/auth/login', {
-        email: 'test@example.com',
-        password: 'password123'
-      });
-
-
-      const receivedToken = response.data.token;
-
-
-      localStorage.setItem('token', receivedToken);
-      setToken(receivedToken);
-      setStatus('Login Successful! Token secured.');
-
-    } catch (error: any) {
-      setStatus(`Login Failed: ${error.response?.data?.message || error.message}`);
-    }
-  };
-
-  const handleClearToken = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setStatus('Token destroyed.');
-  };
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1>DevSync Security Bridge</h1>
+    <Router>
+      <Routes>
+        {/* The Public Door */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        {/* The Protected Room (We will lock this down later) */}
+        <Route path="/" element={<Home />} />
 
-      <div style={{ padding: '1rem', background: '#f3f4f6', borderRadius: '8px', marginBottom: '1rem' }}>
-        <p><strong>Status:</strong> {status}</p>
-        <p><strong>Token:</strong> {token ? `${token.substring(0, 20)}...` : 'None'}</p>
-      </div>
+        {/* Catch-all: If they type a random URL, send them to login */}
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/workspace/:workspaceId" element={<ProjectBoard />} />
+          <Route path="/project/:projectId" element={<TaskBoard />} />
+        </Route>
 
-      <div style={{ display: 'flex', gap: '1rem' }}>
-        <button
-          onClick={handleLoginTest}
-          style={{ padding: '0.5rem 1rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-        >
-          Test Login Connection
-        </button>
-
-        <button
-          onClick={handleClearToken}
-          style={{ padding: '0.5rem 1rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-        >
-          Clear Token
-        </button>
-      </div>
-    </div>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
