@@ -18,7 +18,6 @@ export default function TaskBoard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // New State for Task Creation
     const [isCreating, setIsCreating] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [newTask, setNewTask] = useState({
@@ -27,7 +26,6 @@ export default function TaskBoard() {
         priority: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH'
     });
 
-    // 1. Fetch Pipeline
     useEffect(() => {
         const fetchTasks = async () => {
             try {
@@ -42,13 +40,9 @@ export default function TaskBoard() {
                 }
             }
         };
-
-        if (projectId) {
-            fetchTasks();
-        }
+        if (projectId) fetchTasks();
     }, [projectId]);
 
-    // Task Creation Function
     const handleCreateTask = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newTask.title.trim()) return;
@@ -62,10 +56,7 @@ export default function TaskBoard() {
                 projectId: projectId
             });
 
-            // Update UI instantly by spreading the old tasks and adding the new one
             setTasks([...tasks, response.data.data.task]);
-
-            // Reset form state
             setNewTask({ title: '', description: '', priority: 'MEDIUM' });
             setShowForm(false);
             setIsCreating(false);
@@ -75,13 +66,9 @@ export default function TaskBoard() {
         }
     };
 
-    // 3. The Status Mutation Engine
     const handleStatusChange = async (taskId: string, newStatus: 'TODO' | 'IN_PROGRESS' | 'DONE') => {
         try {
-            // Hit the backend PATCH route we built yesterday
             await api.patch(`/tasks/${taskId}`, { status: newStatus });
-
-            // Instantly update the UI by mapping over the array and swapping the status of the matched task
             setTasks(tasks.map(task =>
                 task._id === taskId ? { ...task, status: newStatus } : task
             ));
@@ -90,142 +77,191 @@ export default function TaskBoard() {
         }
     };
 
-    if (loading) return <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>Loading Kanban board...</div>;
+    if (loading) return (
+        <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+    );
 
-    // 2. Column Filtering Logic
     const todoTasks = tasks.filter(t => t.status === 'TODO');
     const inProgressTasks = tasks.filter(t => t.status === 'IN_PROGRESS');
     const doneTasks = tasks.filter(t => t.status === 'DONE');
 
-    return (
-        <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', fontFamily: 'system-ui' }}>
+    // Helper to render color-coded priority pills
+    const PriorityBadge = ({ priority }: { priority: string }) => {
+        const styles = {
+            HIGH: 'bg-rose-100 text-rose-700 border-rose-200',
+            MEDIUM: 'bg-amber-100 text-amber-700 border-amber-200',
+            LOW: 'bg-emerald-100 text-emerald-700 border-emerald-200'
+        }[priority] || 'bg-slate-100 text-slate-700';
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '1.5rem', cursor: 'pointer' }}>←</button>
-                    <h2>Project Board</h2>
+        return (
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${styles}`}>
+                {priority}
+            </span>
+        );
+    };
+
+    return (
+        <div className="flex flex-col h-full font-sans antialiased">
+
+            {/* 1. Header Area */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200/60">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </button>
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Active Sprint</h2>
+                        <p className="text-sm text-slate-500 font-medium">Kanban Board Overview</p>
+                    </div>
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    style={{ padding: '0.5rem 1.5rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-indigo-500 transition-colors focus:ring-2 focus:ring-indigo-500/20"
                 >
-                    {showForm ? 'Cancel' : '+ New Task'}
+                    {showForm ? 'Cancel Creation' : '+ Create Issue'}
                 </button>
             </div>
 
-            {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
+            {error && (
+                <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm font-medium">
+                    {error}
+                </div>
+            )}
 
-            {/* Task Creation Form UI */}
+            {/* 2. Creation Form Modal (Inline) */}
             {showForm && (
-                <form onSubmit={handleCreateTask} style={{ background: '#e5e7eb', padding: '1.5rem', borderRadius: '8px', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <input
-                        type="text"
-                        placeholder="Task Title..."
-                        value={newTask.title}
-                        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                        style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                        required
-                    />
-                    <textarea
-                        placeholder="Description (Optional)"
-                        value={newTask.description}
-                        onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                        style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px' }}
-                    />
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <form onSubmit={handleCreateTask} className="mb-8 bg-white p-6 rounded-xl border border-slate-200 shadow-lg shadow-slate-200/40 grid gap-4">
+                    <div className="flex gap-4">
+                        <input
+                            type="text"
+                            placeholder="What needs to be done?"
+                            value={newTask.title}
+                            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                            required
+                            className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
+                        />
                         <select
                             value={newTask.priority}
                             onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as any })}
-                            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                            className="rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none"
                         >
                             <option value="LOW">Low Priority</option>
                             <option value="MEDIUM">Medium Priority</option>
                             <option value="HIGH">High Priority</option>
                         </select>
+                    </div>
+                    <textarea
+                        placeholder="Add a more detailed description..."
+                        value={newTask.description}
+                        onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                        className="w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none min-h-[100px]"
+                    />
+                    <div className="flex justify-end">
                         <button
                             type="submit"
                             disabled={isCreating}
-                            style={{ padding: '0.5rem 1.5rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: isCreating ? 'not-allowed' : 'pointer' }}
+                            className="px-6 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-500 disabled:opacity-50 transition-colors"
                         >
-                            {isCreating ? 'Creating...' : 'Create Ticket'}
+                            {isCreating ? 'Creating...' : 'Save Issue'}
                         </button>
                     </div>
                 </form>
             )}
 
             {/* 3. The Kanban Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginTop: '2rem' }}>
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-8">
 
                 {/* TO DO COLUMN */}
-                <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '8px', minHeight: '600px' }}>
-                    <h3 style={{ borderBottom: '2px solid #ccc', paddingBottom: '0.5rem' }}>To Do ({todoTasks.length})</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                        {todoTasks.map(task => (
-                            <div key={task._id} style={{ background: 'white', padding: '1rem', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderLeft: '4px solid #6b7280' }}>
-                                <h4 style={{ margin: '0 0 0.5rem 0' }}>{task.title}</h4>
-                                <span style={{ fontSize: '0.8rem', background: '#e5e7eb', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{task.priority}</span>
-                                {/* Add this inside the To Do card, below the priority span */}
+                <div className="bg-slate-100/50 rounded-2xl p-4 min-h-[600px] border border-slate-200/60 flex flex-col gap-3">
+                    <div className="flex items-center justify-between mb-2 px-1">
+                        <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-slate-400"></span> To Do
+                        </h3>
+                        <span className="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-1 rounded-md">{todoTasks.length}</span>
+                    </div>
+                    {todoTasks.map(task => (
+                        <div key={task._id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all group cursor-pointer">
+                            <div className="flex justify-between items-start mb-3">
+                                <h4 className="font-semibold text-slate-900 leading-snug pr-4">{task.title}</h4>
+                            </div>
+                            <PriorityBadge priority={task.priority} />
+                            <div className="mt-4 pt-4 border-t border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                     onClick={() => handleStatusChange(task._id, 'IN_PROGRESS')}
-                                    style={{ display: 'block', marginTop: '0.75rem', width: '100%', padding: '0.4rem', background: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', color: '#374151' }}
+                                    className="w-full text-center text-sm font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 py-2 rounded-lg transition-colors"
                                 >
                                     Start Work ➔
                                 </button>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
                 </div>
 
                 {/* IN PROGRESS COLUMN */}
-                <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '8px', minHeight: '600px' }}>
-                    <h3 style={{ borderBottom: '2px solid #ccc', paddingBottom: '0.5rem' }}>In Progress ({inProgressTasks.length})</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                        {inProgressTasks.map(task => (
-                            <div key={task._id} style={{ background: 'white', padding: '1rem', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderLeft: '4px solid #3b82f6' }}>
-                                <h4 style={{ margin: '0 0 0.5rem 0' }}>{task.title}</h4>
-                                <span style={{ fontSize: '0.8rem', background: '#e5e7eb', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{task.priority}</span>
-                                {/* Add this inside the In Progress card */}
-                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                                    <button
-                                        onClick={() => handleStatusChange(task._id, 'TODO')}
-                                        style={{ flex: 1, padding: '0.4rem', background: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', color: '#374151' }}
-                                    >
-                                        ← Back
-                                    </button>
-                                    <button
-                                        onClick={() => handleStatusChange(task._id, 'DONE')}
-                                        style={{ flex: 1, padding: '0.4rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
-                                    >
-                                        Complete ➔
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                <div className="bg-indigo-50/30 rounded-2xl p-4 min-h-[600px] border border-indigo-100 flex flex-col gap-3">
+                    <div className="flex items-center justify-between mb-2 px-1">
+                        <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> In Progress
+                        </h3>
+                        <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded-md">{inProgressTasks.length}</span>
                     </div>
+                    {inProgressTasks.map(task => (
+                        <div key={task._id} className="bg-white p-5 rounded-xl border border-indigo-200 shadow-sm hover:shadow-md transition-all group cursor-pointer ring-1 ring-indigo-500/5">
+                            <div className="flex justify-between items-start mb-3">
+                                <h4 className="font-semibold text-slate-900 leading-snug pr-4">{task.title}</h4>
+                            </div>
+                            <PriorityBadge priority={task.priority} />
+                            <div className="mt-4 pt-4 border-t border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                <button
+                                    onClick={() => handleStatusChange(task._id, 'TODO')}
+                                    className="flex-1 text-center text-sm font-semibold text-slate-600 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 py-2 rounded-lg transition-colors"
+                                >
+                                    ← Back
+                                </button>
+                                <button
+                                    onClick={() => handleStatusChange(task._id, 'DONE')}
+                                    className="flex-1 text-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 py-2 rounded-lg transition-colors"
+                                >
+                                    Complete ✓
+                                </button>
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
                 {/* DONE COLUMN */}
-                <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '8px', minHeight: '600px' }}>
-                    <h3 style={{ borderBottom: '2px solid #ccc', paddingBottom: '0.5rem' }}>Done ({doneTasks.length})</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                        {doneTasks.map(task => (
-                            <div key={task._id} style={{ background: 'white', padding: '1rem', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderLeft: '4px solid #10b981' }}>
-                                <h4 style={{ margin: '0 0 0.5rem 0' }}>{task.title}</h4>
-                                <span style={{ fontSize: '0.8rem', background: '#e5e7eb', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>{task.priority}</span>
-                                {/* Add this inside the Done card */}
+                <div className="bg-emerald-50/30 rounded-2xl p-4 min-h-[600px] border border-emerald-100 flex flex-col gap-3">
+                    <div className="flex items-center justify-between mb-2 px-1">
+                        <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Done
+                        </h3>
+                        <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-md">{doneTasks.length}</span>
+                    </div>
+                    {doneTasks.map(task => (
+                        <div key={task._id} className="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm hover:shadow-md transition-all group cursor-pointer opacity-75 hover:opacity-100">
+                            <div className="flex justify-between items-start mb-3">
+                                <h4 className="font-semibold text-slate-500 line-through leading-snug pr-4">{task.title}</h4>
+                            </div>
+                            <PriorityBadge priority={task.priority} />
+                            <div className="mt-4 pt-4 border-t border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                     onClick={() => handleStatusChange(task._id, 'IN_PROGRESS')}
-                                    style={{ display: 'block', marginTop: '0.75rem', width: '100%', padding: '0.4rem', background: '#e5e7eb', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', color: '#374151' }}
+                                    className="w-full text-center text-sm font-semibold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 py-2 rounded-lg transition-colors flex justify-center items-center gap-2"
                                 >
-                                    ↺ Reopen Task
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    Reopen Issue
                                 </button>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
                 </div>
 
             </div>
-
         </div>
     );
 }
