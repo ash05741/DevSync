@@ -21,6 +21,9 @@ app.use('/api/auth', authroutes);
 app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
+app.get('/api/ping', (req, res) => {
+    res.status(200).json({ message: 'Server is awake and running.' });
+});
 
 app.get('/health', (req: Request, res: Response) => {
     res.status(200).json({ status: 'DevSync API is operation' })
