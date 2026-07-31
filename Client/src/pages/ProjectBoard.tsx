@@ -72,21 +72,22 @@ export default function ProjectBoard() {
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', fontFamily: 'system-ui' }}>
 
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}>
+            {/* Added flexWrap for safe header stacking on tiny screens */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}>
                 <Link to="/dashboard" style={{ textDecoration: 'none', color: '#6b7280', fontSize: '1.5rem' }}>←</Link>
-                <h2>Workspace Projects</h2>
+                <h2 style={{ margin: 0 }}>Workspace Projects</h2>
             </div>
 
             {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
 
-            {/* 3. The Creation Form UI */}
-            <form onSubmit={handleCreateProject} style={{ display: 'flex', gap: '1rem', marginTop: '2rem', background: '#e5e7eb', padding: '1rem', borderRadius: '8px' }}>
+            {/* 3. The Creation Form UI - Added flexWrap so the input and button stack gracefully */}
+            <form onSubmit={handleCreateProject} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem', background: '#e5e7eb', padding: '1rem', borderRadius: '8px' }}>
                 <input
                     type="text"
                     placeholder="Enter new project name..."
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
-                    style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                    style={{ flex: '1 1 200px', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
                     required
                 />
                 <button
@@ -106,7 +107,8 @@ export default function ProjectBoard() {
                     </div>
                 ) : (
                     projects.map((proj) => (
-                        <div key={proj._id} style={{ padding: '1.5rem', background: '#f3f4f6', borderRadius: '8px', borderLeft: '4px solid #10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        /* Added flexWrap and gap here to prevent button/text overlapping */
+                        <div key={proj._id} style={{ padding: '1.5rem', background: '#f3f4f6', borderRadius: '8px', borderLeft: '4px solid #10b981', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                                 <h3 style={{ margin: '0 0 0.5rem 0' }}>{proj.name}</h3>
                                 <p style={{ margin: 0, color: '#666', fontSize: '0.9rem' }}>ID: {proj._id}</p>

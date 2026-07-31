@@ -105,8 +105,8 @@ export default function TaskBoard() {
     return (
         <div className="flex flex-col h-full font-sans antialiased">
 
-            {/* 1. Header Area */}
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200/60">
+            {/* 1. Header Area - Added flex-wrap and gap-4 so the button safely drops to the next line on mobile */}
+            <div className="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-slate-200/60">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate(-1)}
@@ -121,7 +121,7 @@ export default function TaskBoard() {
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-indigo-500 transition-colors focus:ring-2 focus:ring-indigo-500/20"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-indigo-500 transition-colors focus:ring-2 focus:ring-indigo-500/20 w-full sm:w-auto justify-center"
                 >
                     {showForm ? 'Cancel Creation' : '+ Create Issue'}
                 </button>
@@ -136,7 +136,8 @@ export default function TaskBoard() {
             {/* 2. Creation Form Modal (Inline) */}
             {showForm && (
                 <form onSubmit={handleCreateTask} className="mb-8 bg-white p-6 rounded-xl border border-slate-200 shadow-lg shadow-slate-200/40 grid gap-4">
-                    <div className="flex gap-4">
+                    {/* Added flex-col sm:flex-row so input and select stack neatly on small screens */}
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <input
                             type="text"
                             placeholder="What needs to be done?"
@@ -148,7 +149,7 @@ export default function TaskBoard() {
                         <select
                             value={newTask.priority}
                             onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as any })}
-                            className="rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                            className="rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none w-full sm:w-auto"
                         >
                             <option value="LOW">Low Priority</option>
                             <option value="MEDIUM">Medium Priority</option>
@@ -165,7 +166,7 @@ export default function TaskBoard() {
                         <button
                             type="submit"
                             disabled={isCreating}
-                            className="px-6 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                            className="px-6 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-500 disabled:opacity-50 transition-colors w-full sm:w-auto"
                         >
                             {isCreating ? 'Creating...' : 'Save Issue'}
                         </button>
@@ -173,7 +174,7 @@ export default function TaskBoard() {
                 </form>
             )}
 
-            {/* 3. The Kanban Grid */}
+            {/* 3. The Kanban Grid - Your implementation here was already perfectly responsive! (grid-cols-1 md:grid-cols-3) */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 items-start pb-8">
 
                 {/* TO DO COLUMN */}

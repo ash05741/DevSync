@@ -76,8 +76,9 @@ export default function Dashboard() {
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', fontFamily: 'system-ui' }}>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}>
-                <h2>My Workspaces</h2>
+            {/* Added flexWrap and gap for mobile responsiveness */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ccc', paddingBottom: '1rem' }}>
+                <h2 style={{ margin: 0 }}>My Workspaces</h2>
                 <button
                     onClick={handleLogout}
                     style={{ padding: '0.5rem 1rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
@@ -88,14 +89,14 @@ export default function Dashboard() {
 
             {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
 
-            {/* 3. The Creation Form UI */}
-            <form onSubmit={handleCreateWorkspace} style={{ display: 'flex', gap: '1rem', marginTop: '2rem', background: '#e5e7eb', padding: '1rem', borderRadius: '8px' }}>
+            {/* 3. The Creation Form UI - Added flexWrap so the input and button stack on tiny screens */}
+            <form onSubmit={handleCreateWorkspace} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem', background: '#e5e7eb', padding: '1rem', borderRadius: '8px' }}>
                 <input
                     type="text"
                     placeholder="Enter new workspace name..."
                     value={newWorkspaceName}
                     onChange={(e) => setNewWorkspaceName(e.target.value)}
-                    style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                    style={{ flex: '1 1 200px', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
                     required
                 />
                 <button
@@ -115,7 +116,8 @@ export default function Dashboard() {
                     </div>
                 ) : (
                     workspaces.map((ws) => (
-                        <div key={ws._id} style={{ padding: '1.5rem', background: '#f3f4f6', borderRadius: '8px', borderLeft: '4px solid #3b82f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        /* Added flexWrap and gap here as well to prevent overlapping on mobile */
+                        <div key={ws._id} style={{ padding: '1.5rem', background: '#f3f4f6', borderRadius: '8px', borderLeft: '4px solid #3b82f6', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                                 <h3 style={{ margin: '0 0 0.5rem 0' }}>{ws.name}</h3>
                                 <p style={{ margin: 0, color: '#666', fontSize: '0.9rem' }}>ID: {ws._id}</p>
