@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Layout() {
     const navigate = useNavigate();
-    const location = useLocation(); // We use this to highlight the active menu item
+    const location = useLocation();
+
+    // 1. State to control the mobile sidebar
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -10,16 +14,33 @@ export default function Layout() {
     };
 
     return (
-        <div className="flex h-screen bg-slate-50 font-sans text-slate-900 antialiased">
+        <div className="flex h-screen bg-slate-50 font-sans text-slate-900 antialiased overflow-hidden">
 
-            {/* 1. The Premium Sidebar */}
-            <aside className="w-64 bg-slate-950 text-slate-300 flex flex-col border-r border-slate-800 shadow-2xl z-20">
+            {/* Mobile Overlay - Clicking it closes the sidebar */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
 
+            {/* 1. The Premium Sidebar - Now absolute on mobile, relative on desktop */}
+            <aside
+                className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-950 text-slate-300 flex flex-col border-r border-slate-800 shadow-2xl transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    }`}
+            >
                 {/* Brand Area with Gradient Text */}
-                <div className="h-16 flex items-center px-6 border-b border-slate-800/50">
+                <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800/50">
                     <span className="text-2xl font-black bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">
                         DevSync
                     </span>
+                    {/* Close button for mobile inside the sidebar */}
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="md:hidden text-slate-400 hover:text-white"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
 
                 {/* Navigation Area */}
@@ -28,6 +49,7 @@ export default function Layout() {
 
                     <Link
                         to="/dashboard"
+                        onClick={() => setIsSidebarOpen(false)} // Auto-close on navigation for mobile
                         className={`block px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${location.pathname.includes('/dashboard') || location.pathname.includes('/workspace')
                                 ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
                                 : 'hover:bg-slate-800/50 hover:text-slate-100 border border-transparent'
@@ -56,25 +78,38 @@ export default function Layout() {
             <div className="flex-1 flex flex-col overflow-hidden relative">
 
                 {/* Glassmorphism Top Header */}
-                <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8 z-10 sticky top-0">
-                    {/* Breadcrumb Area (Placeholder for now) */}
-                    <div className="text-sm font-medium text-slate-500">
-                        Platform / <span className="text-slate-900">Active Directory</span>
+                <header className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 z-10 sticky top-0">
+
+                    <div className="flex items-center gap-3">
+                        {/* Mobile Hamburger Button */}
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                        </button>
+
+                        {/* Breadcrumb Area - Hidden on extra small screens to save space */}
+                        <div className="text-sm font-medium text-slate-500 hidden sm:block">
+                            Platform / <span className="text-slate-900">Active Directory</span>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="flex flex-col items-end">
+                        {/* Name and status - Hidden on tiny screens */}
+                        <div className="hidden sm:flex flex-col items-end">
                             <span className="text-sm font-bold text-slate-700 leading-none">Developer Account</span>
                             <span className="text-xs text-emerald-500 font-medium">Online</span>
                         </div>
-                        <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md shadow-indigo-200 border-2 border-white ring-2 ring-slate-100">
+                        {/* Avatar */}
+                        <div className="w-9 h-9 shrink-0 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md shadow-indigo-200 border-2 border-white ring-2 ring-slate-100">
                             D
                         </div>
                     </div>
                 </header>
 
-                {/* 3. The Dynamic Canvas */}
-                <main className="flex-1 overflow-y-auto p-8 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
+                {/* 3. The Dynamic Canvas - Adjusted padding for mobile */}
+                <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
                     <div className="max-w-7xl mx-auto">
                         <Outlet />
                     </div>
